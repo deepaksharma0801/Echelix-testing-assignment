@@ -40,9 +40,13 @@ npm run test:report
 playwright-poc/
 ├── api/
 │   └── userApiClient.ts       # POST /api/users/reset-password
+├── helpers/
+│   └── gmailHelper.ts         # Gmail OAuth poller – fetches raw email body
 ├── pages/
-│   ├── loginPage.ts           # Login form POM
-│   └── resetPasswordPage.ts   # Reset password form POM
+│   ├── loginPage.ts           # Login form POM + assertions
+│   └── resetPasswordPage.ts   # Reset password form POM + assertions
+├── utils/
+│   └── emailParser.ts         # Extracts reset link from raw email body
 └── playwright.config.ts       # Playwright configuration
 ```
 
