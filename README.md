@@ -1,10 +1,113 @@
-# Playwright POC – Password Reset Workflow
+# Playwright TypeScript POC — Password Reset Workflow
+
+> **Take-home assessment submission.**
+> This project demonstrates Playwright as a unified automation framework capable of validating API calls, UI interactions, and asynchronous email notifications within a single end-to-end test workflow.
+
+---
+
+## What This Project Proves
+
+This POC validates all five success criteria from the assignment:
+
+| # | Criterion | Implementation |
+|---|---|---|
+| 1 | Playwright triggers backend API operations | `api/userApiClient.ts` → `POST /api/users/reset-password` |
+| 2 | Email notification is retrieved automatically | `services/gmailService.ts` → Gmail OAuth2 inbox poller |
+| 3 | Email content parsed to extract reset link | `utils/emailParser.ts` → Base64url decode + dual-strategy regex |
+| 4 | UI automation completes password reset workflow | `pages/resetPasswordPage.ts` → Page Object Model |
+| 5 | User login succeeds with updated credentials | `pages/loginPage.ts` → Page Object Model + `assertLoginSuccess()` |
+
+---
+
+## End-to-End Flow
+
+```
+npm test
+  │
+  ├── 1. POST /api/users/reset-password        ← UserApiClient (Playwright APIRequestContext)
+  │         │
+  │         ▼
+  ├── 2. Mock server generates UUID token
+  │         │
+  │         ▼
+  ├── 3. nodemailer sends REAL email to Gmail inbox
+  │         │
+  │         ▼
+  ├── 4. GmailService polls inbox every 3s (up to 60s)
+  │         │
+  │         ▼
+  ├── 5. emailParser extracts reset link (Base64url → regex)
+  │         │
+  │         ▼
+  ├── 6. Playwright navigates to reset link, fills form, submits
+  │         │
+  │         ▼
+  └── 7. Playwright logs in with new password → assertLoginSuccess()
+```
+
+---
+
+## Project Structure
+
+```
+playwright-poc/
+├── api/
+│   └── userApiClient.ts        # Layer 2 – Typed API client using Playwright's APIRequestContext
+├── services/
+│   └── gmailService.ts         # Layer 3 – Gmail OAuth2 inbox poller with retry + sentAfter guard
+├── utils/
+│   └── emailParser.ts          # Layer 4 – Base64url decoder, HTML stripper, dual-strategy link extractor
+├── pages/
+│   ├── loginPage.ts            # Layer 5 – Login POM: goto, login, assertLoginSuccess, assertLoginError
+│   └── resetPasswordPage.ts    # Layer 5 – Reset POM: goto, resetPassword, assertResetSuccess, assertValidationError
+├── tests/
+│   └── passwordReset.spec.ts   # Layer 6 – 3 tests: happy path + unknown email + invalid token
+├── mock/
+│   └── server.ts               # Layer 6 – Express backend: seeded user store, token registry, nodemailer SMTP
+├── playwright.config.ts        # Layer 1 – Chromium only, 90s timeout, HTML report, trace on failure
+├── tsconfig.json               # Strict TypeScript (ES2022, no implicit any)
+├── .env.example                # All 14 required environment variables documented
+└── .gitignore                  # Excludes .env, node_modules, test-results, playwright-report
+```
+
+---
+
+## Architecture Decisions
+
+### Why a local mock server?
+The assignment requires testing a full `API → Email → UI` flow. Rather than depending on a live Echelix environment (which is not accessible), a local Express mock server replicates the exact same contract: it accepts `POST /api/users/reset-password`, generates a UUID token, and sends a **real email** via Gmail SMTP. This means the Gmail polling and parsing layers are exercised with genuine email payloads — not stubs.
+
+### Why two Gmail credential sets?
+- **Sending** (SMTP + App Password): simple, no OAuth scope needed, ideal for outbound-only mock server
+- **Reading** (OAuth2 + Refresh Token): required by Gmail API for inbox polling — App Passwords cannot access the API
+
+### Why `RESET_LINK_OVERRIDE`?
+Allows running all 3 tests without Gmail credentials by manually injecting the reset link. This is the recommended mode for CI environments or reviewers who do not want to set up OAuth2.
+
+### Why `sentAfter` guard in Gmail polling?
+Without it, a stale reset email from a previous run could be matched by the poller, causing false positives. The guard filters to only emails received **after** the API call was made.
+
+### Why strict TypeScript?
+`tsconfig.json` enables `strict`, `noImplicitAny`, and `strictNullChecks`. This catches contract mismatches between layers at compile time rather than at runtime during a test run.
+
+---
+
+## Test Coverage
+
+| Test | Type | What it proves |
+|---|---|---|
+| `password reset – full happy path` | E2E | All 5 success criteria in sequence |
+| `password reset – unknown email returns non-500` | Negative / API | API does not leak server errors for unknown users |
+| `password reset – invalid token shows error alert` | Negative / UI | UI handles tampered/expired tokens gracefully |
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js 20 LTS or higher
 - npm 10+
+- A Gmail account with 2-Step Verification enabled
 
 ### Setup
 
@@ -15,17 +118,17 @@ npm install
 # 2. Install Playwright browsers
 npx playwright install chromium
 
-# 3. Copy the secrets template and fill in real values
+# 3. Copy the secrets template and fill in your values
 cp .env.example .env
 ```
 
 ### Run the Tests
 
 ```bash
-# Headless
+# Headless (default)
 npm test
 
-# Headed (watch the browser)
+# Headed — watch the browser automate
 npm run test:headed
 
 # Open HTML report after a run
@@ -34,43 +137,54 @@ npm run test:report
 
 ---
 
-## Project Structure
-
-```
-playwright-poc/
-├── api/
-│   └── userApiClient.ts       # Layer 2 – POST /api/users/reset-password
-├── services/
-│   └── gmailService.ts        # Layer 3 – Gmail OAuth2 inbox poller
-├── utils/
-│   └── emailParser.ts         # Layer 4 – extracts reset link from email body
-├── pages/
-│   ├── loginPage.ts           # Layer 5 – login form POM + assertions
-│   └── resetPasswordPage.ts   # Layer 5 – reset password form POM + assertions
-├── tests/
-│   └── passwordReset.spec.ts  # Layer 6 – 3 tests (happy path + 2 negatives)
-├── mock/
-│   └── server.ts              # Layer 6 – Express mock backend (sends real email)
-└── playwright.config.ts       # Layer 1 – Playwright configuration
-```
-
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in all values before running tests.
+Copy `.env.example` to `.env` and fill in all values. Never commit `.env` — it is in `.gitignore`.
 
-| Variable | Description |
-|---|---|
-| `BASE_URL` | App base URL (e.g. `http://localhost:3000`) |
-| `API_BASE_URL` | API base URL |
-| `API_KEY` | Bearer token for API requests |
-| `TEST_USER_EMAIL` | Test account email |
-| `TEST_USER_CURRENT_PASSWORD` | Current password (pre-reset) |
-| `TEST_USER_NEW_PASSWORD` | New password (post-reset) |
-| `GMAIL_CLIENT_ID` | Gmail OAuth client ID (for **reading** inbox) |
-| `GMAIL_CLIENT_SECRET` | Gmail OAuth client secret (for **reading** inbox) |
-| `GMAIL_REFRESH_TOKEN` | Gmail OAuth refresh token (for **reading** inbox) |
-| `GMAIL_USER` | Gmail address to poll |
-| `GMAIL_SMTP_USER` | Gmail address for **sending** via SMTP |
-| `GMAIL_SMTP_APP_PASSWORD` | Gmail App Password 16-char (for **sending**) |
-| `MOCK_PORT` | Port for the local mock server (default `3000`) |
-| `RESET_LINK_OVERRIDE` | Skip Gmail — paste a token URL here for local testing |
+| Variable | Required | Description |
+|---|---|---|
+| `BASE_URL` | ✅ | App base URL (e.g. `http://localhost:3000`) |
+| `API_BASE_URL` | ✅ | API base URL |
+| `API_KEY` | ✅ | Bearer token for API requests |
+| `TEST_USER_EMAIL` | ✅ | Gmail address used as the test account |
+| `TEST_USER_CURRENT_PASSWORD` | ✅ | Password before the reset |
+| `TEST_USER_NEW_PASSWORD` | ✅ | Password to set during the reset |
+| `GMAIL_CLIENT_ID` | ✅ | OAuth2 Client ID — for **reading** inbox via Gmail API |
+| `GMAIL_CLIENT_SECRET` | ✅ | OAuth2 Client Secret — for **reading** inbox |
+| `GMAIL_REFRESH_TOKEN` | ✅ | OAuth2 Refresh Token — for **reading** inbox |
+| `GMAIL_USER` | ✅ | Gmail address to poll |
+| `GMAIL_SMTP_USER` | ✅ | Gmail address for **sending** reset emails |
+| `GMAIL_SMTP_APP_PASSWORD` | ✅ | Gmail App Password (16 chars) — for **sending** |
+| `MOCK_PORT` | Optional | Port for mock server (default: `3000`) |
+| `RESET_LINK_OVERRIDE` | Optional | Bypass Gmail — paste a token URL to skip email polling |
+
+### Quick local test (no Gmail OAuth needed)
+
+```bash
+# Terminal 1 — start mock server
+npx ts-node mock/server.ts
+
+# Terminal 2 — trigger reset and copy token from Terminal 1 output
+curl -s -X POST http://localhost:3000/api/users/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"youraddress@gmail.com"}'
+
+# Set override and run
+export RESET_LINK_OVERRIDE="http://localhost:3000/reset-password?token=PASTE-TOKEN-HERE"
+npm test
+```
+
+---
+
+## Reporting
+
+Playwright generates a full HTML report after every run:
+
+```bash
+npm run test:report
+```
+
+On failure, the following artifacts are saved automatically to `test-results/`:
+- `screenshot.png` — screenshot at point of failure
+- `trace.zip` — full Playwright trace (open with `npx playwright show-trace`)
+- `video.webm` — full video recording of the test run
