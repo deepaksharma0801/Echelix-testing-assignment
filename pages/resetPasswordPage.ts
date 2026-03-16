@@ -26,7 +26,7 @@ export class ResetPasswordPage {
     this.newPasswordInput     = page.locator('[data-testid="new-password"]').or(page.getByLabel(/new password/i));
     this.confirmPasswordInput = page.locator('[data-testid="confirm-password"]').or(page.getByLabel(/confirm password/i));
     this.submitButton         = page.locator('[data-testid="reset-submit"]').or(page.getByRole('button', { name: /reset|submit|save/i }));
-    this.successMessage       = page.locator('[data-testid="reset-success"]').or(page.getByText(/password.*reset|password.*updated|success/i));
+    this.successMessage       = page.locator('[data-testid="reset-success"]').first();
     this.errorMessage         = page.locator('[data-testid="reset-error"]').or(page.getByRole('alert'));
     this.resetForm            = page.locator('form').or(page.locator('[data-testid="reset-form"]'));
   }
