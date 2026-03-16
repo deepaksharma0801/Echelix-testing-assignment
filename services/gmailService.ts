@@ -66,26 +66,35 @@ export async function waitForResetEmail(
     // Search for unread messages with matching subject received after trigger
     const query = `subject:${subjectKeyword} is:unread after:${Math.floor(afterEpochMs / 1000)}`;
 
-    const listRes = await gmail.users.messages.list({ userId, q: query, maxResults: 5 });
+    const listRes = await gmail.users.messages.list({ userId, q: query, maxResults: 10 });
     const messages = listRes.data.messages ?? [];
 
     if (messages.length > 0) {
-      const msgId  = messages[0].id!;
-      const msgRes = await gmail.users.messages.get({ userId, id: msgId, format: 'full' });
-      const payload = msgRes.data.payload;
+      for (const message of messages) {
+        const msgId  = message.id!;
+        const msgRes = await gmail.users.messages.get({ userId, id: msgId, format: 'full' });
 
-      const body = extractBody(payload);
-      const match = body.match(RESET_LINK_REGEX);
+        // Gmail `after:` only filters by day — use internalDate for precise time check
+        // internalDate is in ms but rounded to second boundary, so compare at second granularity
+        const internalDate = Number(msgRes.data.internalDate ?? 0);
+        if (Math.floor(internalDate / 1000) < Math.floor(afterEpochMs / 1000)) {
+          console.log(`[gmailService] Skipping stale email (internalDate=${internalDate} < afterEpochMs=${afterEpochMs})`);
+          continue;
+        }
 
-      if (match) {
-        // Mark as read so subsequent runs don't re-use the same email
-        await gmail.users.messages.modify({
-          userId,
-          id: msgId,
-          requestBody: { removeLabelIds: ['UNREAD'] },
-        });
+        const payload = msgRes.data.payload;
+        const body = extractBody(payload);
+        const match = body.match(RESET_LINK_REGEX);
 
-        return { messageId: msgId, resetLink: match[0] };
+        if (match) {
+          console.log(`[gmailService] Found reset link: ${match[0]}`);
+          console.log(`[gmailService] Email internalDate: ${internalDate}, afterEpochMs: ${afterEpochMs}`);
+
+          // Trash the email so it cannot be reused in any future run
+          await gmail.users.messages.trash({ userId, id: msgId });
+
+          return { messageId: msgId, resetLink: match[0] };
+        }
       }
     }
 

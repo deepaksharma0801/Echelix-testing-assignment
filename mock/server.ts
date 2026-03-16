@@ -187,10 +187,32 @@ app.post('/api/login', (req: Request, res: Response) => {
 
   if (!stored || stored !== password) {
     res.status(401).send(`<!DOCTYPE html>
-<html lang="en"><body>
-  <div data-testid="login-error" role="alert">Invalid email or password.</div>
-  <a href="/login">Try again</a>
-</body></html>`);
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Failed – Echelix</title>
+  <style>${cardPageStyles}</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <img src="/echelix-logo.png" alt="Echelix" style="height:48px; margin-bottom:12px;" />
+      <p>Sign in to your account</p>
+    </div>
+    <div style="text-align:center; padding: 8px 0 24px;">
+      <div style="font-size:48px; margin-bottom:16px;">🔒</div>
+      <h2 style="font-size:18px; color:#d93025; margin-bottom:12px;" data-testid="login-error" role="alert">Invalid Email or Password</h2>
+      <p style="font-size:14px; color:#666; line-height:1.6;">
+        The email or password you entered is incorrect. Please check your credentials and try again.
+      </p>
+    </div>
+    <a href="/login" style="display:block; width:100%; padding:13px; background:#1a73e8; color:#fff; border:none; border-radius:7px; font-size:15px; font-weight:700; cursor:pointer; text-align:center; text-decoration:none; margin-top:8px;">Try Again</a>
+    <a class="back-link" href="/forgot-password">Forgot your password?</a>
+    <div class="footer">© ${new Date().getFullYear()} Echelix. All rights reserved.</div>
+  </div>
+</body>
+</html>`);
     return;
   }
 
@@ -433,37 +455,7 @@ app.post('/forgot-password', async (req: Request, res: Response) => {
       from: `"Echelix Support" <${process.env['GMAIL_SMTP_USER']}>`,
       to: email,
       subject: 'Reset Your Password – Echelix',
-      html: `
-        <!DOCTYPE html>
-        <html lang="en">
-        <body style="margin:0; padding:0; background-color:#f4f6f9; font-family: Arial, sans-serif;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9; padding: 40px 0;">
-            <tr><td align="center">
-              <table width="600" cellpadding="0" cellspacing="0" style="background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-                <tr><td style="background:#1a73e8; padding:32px 40px; text-align:center;">
-                  <h1 style="margin:0; color:#fff; font-size:22px; font-weight:700;">Echelix</h1>
-                </td></tr>
-                <tr><td style="padding:40px 40px 24px;">
-                  <h2 style="margin:0 0 16px; color:#1a1a1a; font-size:20px;">Reset Your Password</h2>
-                  <p style="margin:0 0 28px; color:#444; font-size:15px; line-height:1.6;">
-                    We received a request to reset the password for your Echelix account. Click the button below. This link is valid for <strong>1 hour</strong>.
-                  </p>
-                  <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
-                    <tr><td align="center" style="background:#1a73e8; border-radius:6px;">
-                      <a href="${resetUrl}" style="display:inline-block; padding:14px 36px; color:#fff; font-size:15px; font-weight:700; text-decoration:none;">Reset My Password</a>
-                    </td></tr>
-                  </table>
-                  <hr style="border:none; border-top:1px solid #eee; margin:0 0 24px;" />
-                  <p style="margin:0; color:#aaa; font-size:12px; line-height:1.6;">If you did not request this, you can safely ignore this email.</p>
-                </td></tr>
-                <tr><td style="background:#f9f9f9; padding:20px 40px; text-align:center; border-top:1px solid #eee;">
-                  <p style="margin:0; color:#bbb; font-size:11px;">© ${new Date().getFullYear()} Echelix. All rights reserved.</p>
-                </td></tr>
-              </table>
-            </td></tr>
-          </table>
-        </body>
-        </html>`,
+      html: buildResetEmailHtml(resetUrl),
       text: `Reset your Echelix password: ${resetUrl}\n\nExpires in 1 hour.`,
     });
   } catch {
@@ -763,68 +755,7 @@ app.post('/api/users/reset-password', async (req: Request, res: Response) => {
       from: `"Echelix Support" <${process.env['GMAIL_SMTP_USER']}>`,
       to: email,
       subject: 'Reset Your Password – Echelix',
-      html: `
-        <!DOCTYPE html>
-        <html lang="en">
-        <body style="margin:0; padding:0; background-color:#f4f6f9; font-family: Arial, sans-serif;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9; padding: 40px 0;">
-            <tr>
-              <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:10px; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-
-                  <!-- Header -->
-                  <tr>
-                    <td style="background:#1a73e8; padding: 32px 40px; text-align:center;">
-                      <h1 style="margin:0; color:#ffffff; font-size:22px; font-weight:700; letter-spacing:0.5px;">Echelix</h1>
-                    </td>
-                  </tr>
-
-                  <!-- Body -->
-                  <tr>
-                    <td style="padding: 40px 40px 24px;">
-                      <h2 style="margin:0 0 16px; color:#1a1a1a; font-size:20px;">Reset Your Password</h2>
-                      <p style="margin:0 0 12px; color:#444; font-size:15px; line-height:1.6;">Hi there,</p>
-                      <p style="margin:0 0 28px; color:#444; font-size:15px; line-height:1.6;">
-                        We received a request to reset the password for your Echelix account.
-                        Click the button below to choose a new password. This link is valid for <strong>1 hour</strong>.
-                      </p>
-
-                      <!-- CTA Button -->
-                      <table cellpadding="0" cellspacing="0" style="margin: 0 auto 28px;">
-                        <tr>
-                          <td align="center" style="background:#1a73e8; border-radius:6px;">
-                            <a href="${resetUrl}"
-                               style="display:inline-block; padding:14px 36px; color:#ffffff;
-                                      font-size:15px; font-weight:700; text-decoration:none;
-                                      letter-spacing:0.3px;">
-                              Reset My Password
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <hr style="border:none; border-top:1px solid #eee; margin: 0 0 24px;" />
-
-                      <p style="margin:0; color:#aaa; font-size:12px; line-height:1.6;">
-                        If you did not request a password reset, you can safely ignore this email — your password will not be changed.
-                      </p>
-                    </td>
-                  </tr>
-
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background:#f9f9f9; padding: 20px 40px; text-align:center; border-top:1px solid #eee;">
-                      <p style="margin:0; color:#bbb; font-size:11px;">© ${new Date().getFullYear()} Echelix. All rights reserved.</p>
-                    </td>
-                  </tr>
-
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `,
+      html: buildResetEmailHtml(resetUrl),
       text: `Reset your Echelix password by visiting this link:\n\n${resetUrl}\n\nThis link expires in 1 hour. If you did not request this, ignore this email.`,
     });
 
@@ -837,6 +768,148 @@ app.post('/api/users/reset-password', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Failed to send reset email.' });
   }
 });
+
+// ─── Email template ───────────────────────────────────────────────────────────
+
+/**
+ * Builds a polished, Gmail-friendly HTML reset email.
+ * Uses a dark gradient banner header so the email looks great both in the
+ * inbox preview and when opened.
+ */
+function buildResetEmailHtml(resetUrl: string): string {
+  const year = new Date().getFullYear();
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Your Password – Echelix</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f2f5;font-family:Arial,Helvetica,sans-serif;">
+
+  <!--[if !mso]><!-->
+  <!-- Gmail preview text (hidden) -->
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
+    Action required: reset your Echelix account password. This link expires in 1 hour.&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;
+  </div>
+  <!--<![endif]-->
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0"
+         style="background-color:#f0f2f5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Email card: max-width 600px -->
+        <table width="600" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.10);">
+
+          <!-- ── BANNER HEADER ── -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0d47a1 0%,#1a73e8 60%,#42a5f5 100%);
+                        padding:48px 40px 36px;text-align:center;">
+
+              <!-- Lock icon (SVG inline — renders everywhere) -->
+              <div style="display:inline-block;background:rgba(255,255,255,0.18);
+                           border-radius:50%;width:72px;height:72px;line-height:72px;
+                           text-align:center;margin-bottom:18px;font-size:36px;">
+                &#128274;
+              </div>
+
+              <!-- Brand name -->
+              <h1 style="margin:0 0 6px;color:#ffffff;font-size:28px;font-weight:800;
+                          letter-spacing:1.5px;text-transform:uppercase;
+                          text-shadow:0 1px 4px rgba(0,0,0,0.25);">
+                ECHELIX
+              </h1>
+              <p style="margin:0;color:rgba(255,255,255,0.80);font-size:14px;letter-spacing:0.4px;">
+                Password Reset Request
+              </p>
+            </td>
+          </tr>
+
+          <!-- ── BODY ── -->
+          <tr>
+            <td style="padding:40px 48px 32px;">
+
+              <h2 style="margin:0 0 14px;color:#1a1a1a;font-size:22px;font-weight:700;">
+                Reset Your Password
+              </h2>
+
+              <p style="margin:0 0 10px;color:#444;font-size:15px;line-height:1.7;">
+                Hi there,
+              </p>
+              <p style="margin:0 0 28px;color:#444;font-size:15px;line-height:1.7;">
+                We received a request to reset the password for your <strong>Echelix</strong>
+                account. Click the button below to choose a new password.
+                This link is valid for <strong>1 hour</strong>.
+              </p>
+
+              <!-- CTA button -->
+              <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 32px;">
+                <tr>
+                  <td align="center"
+                      style="background:linear-gradient(135deg,#1558b0,#1a73e8);
+                             border-radius:8px;
+                             box-shadow:0 3px 10px rgba(26,115,232,0.45);">
+                    <a href="${resetUrl}"
+                       style="display:inline-block;padding:15px 44px;
+                              color:#ffffff;font-size:16px;font-weight:700;
+                              text-decoration:none;letter-spacing:0.4px;
+                              border-radius:8px;">
+                      Reset My Password &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Fallback link -->
+              <p style="margin:0 0 24px;color:#888;font-size:12px;line-height:1.6;">
+                If the button doesn&#39;t work, copy and paste this link into your browser:<br/>
+                <a href="${resetUrl}" style="color:#1a73e8;word-break:break-all;">${resetUrl}</a>
+              </p>
+
+              <hr style="border:none;border-top:1px solid #eee;margin:0 0 24px;" />
+
+              <!-- Security note -->
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="background:#f8f9ff;border-left:4px solid #1a73e8;
+                              border-radius:0 6px 6px 0;padding:14px 18px;">
+                    <p style="margin:0;color:#555;font-size:13px;line-height:1.6;">
+                      <strong style="color:#1a1a1a;">Didn&#39;t request this?</strong><br/>
+                      If you didn&#39;t ask to reset your password, you can safely ignore this
+                      email — your password will remain unchanged.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ── FOOTER ── -->
+          <tr>
+            <td style="background:#f9f9f9;padding:20px 48px;text-align:center;
+                        border-top:1px solid #ebebeb;">
+              <p style="margin:0 0 6px;color:#bbb;font-size:11px;">
+                &copy; ${year} Echelix. All rights reserved.
+              </p>
+              <p style="margin:0;color:#ccc;font-size:11px;">
+                This is an automated message — please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Email card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>`;
+}
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 

@@ -231,6 +231,41 @@ npm run test:report
 
 ---
 
+### Why clicking the email link manually shows "Invalid or Expired Link"
+
+This is **expected behaviour**, not a bug.
+
+Reset tokens are **single-use by design** — once the link is clicked (by anyone or anything), the token is deleted from memory so it cannot be reused.
+
+When you run `npm test`, Playwright automatically clicks the link as part of the happy-path test. By the time you open Gmail and click the same link yourself, the token is already gone → "Invalid or Expired Link".
+
+```
+npm test runs
+  │
+  ├── Playwright uses token abc-123 to complete the reset ✅
+  │         → token abc-123 DELETED
+  │
+You click the email link in Gmail
+  └── Server looks up abc-123 → not found → "Invalid or Expired Link" ❌
+```
+
+**To manually click the reset link yourself** (without running the tests), generate a fresh token using `curl`:
+
+```bash
+# Terminal 1 — server must be running
+npx ts-node mock/server.ts
+
+# Terminal 2 — send yourself a fresh email
+curl -s -X POST http://localhost:3000/api/users/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"your-email@gmail.com"}'
+```
+
+Check your Gmail inbox → click the link → the reset form opens correctly ✅
+The token is untouched because no test has consumed it.
+
+---
+
 ### Preview the UI locally
 
 With the mock server running, open these in your browser:
