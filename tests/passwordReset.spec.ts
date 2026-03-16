@@ -65,8 +65,8 @@ test('password reset – full happy path', async ({ page, request }) => {
 
   expect(
     apiResponse.ok,
-    `API trigger failed – HTTP ${apiResponse.status}. ` +
-    'Check that the mock server is running: npx ts-node mock/server.ts'
+    `Expected 2xx from POST /api/users/reset-password but got HTTP ${apiResponse.status}. ` +
+    'Is the mock server running? npx ts-node mock/server.ts'
   ).toBe(true);
 
   // ── Step 2 & 3: Email retrieval + link extraction ─────────────────────────
