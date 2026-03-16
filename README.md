@@ -160,19 +160,86 @@ Copy `.env.example` to `.env` and fill in all values. Never commit `.env` — it
 
 ### Quick local test (no Gmail OAuth needed)
 
-```bash
-# Terminal 1 — start mock server
-npx ts-node mock/server.ts
+> This is the **recommended mode for reviewers**. No Gmail credentials required.
 
-# Terminal 2 — trigger reset and copy token from Terminal 1 output
+**Step 1 — Install dependencies and browser**
+```bash
+npm install
+npx playwright install chromium
+```
+
+**Step 2 — Set up environment**
+```bash
+cp .env.example .env
+```
+Open `.env` and set these minimum values:
+```
+BASE_URL=http://localhost:3000
+API_BASE_URL=http://localhost:3000
+API_KEY=mock-key-123
+TEST_USER_EMAIL=your-email@gmail.com
+TEST_USER_CURRENT_PASSWORD=OldPassword123!
+TEST_USER_NEW_PASSWORD=NewPassword456!
+```
+> ⚠️ On macOS/zsh use **single quotes** for values containing `!` when exporting in terminal
+
+**Step 3 — Open two terminals**
+
+_Terminal 1 — start the mock server:_
+```bash
+npx ts-node mock/server.ts
+```
+✅ Wait for: `[mock] Server running at http://localhost:3000`
+
+_Terminal 2 — trigger a reset token:_
+```bash
 curl -s -X POST http://localhost:3000/api/users/reset-password \
   -H "Content-Type: application/json" \
-  -d '{"email":"youraddress@gmail.com"}'
+  -d '{"email":"your-email@gmail.com"}'
+```
+Copy the token URL printed in Terminal 1:
+```
+[mock] Reset token for ...: http://localhost:3000/reset-password?token=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+```
 
-# Set override and run
+**Step 4 — Run tests**
+```bash
 export RESET_LINK_OVERRIDE="http://localhost:3000/reset-password?token=PASTE-TOKEN-HERE"
+export BASE_URL="http://localhost:3000"
+export API_BASE_URL="http://localhost:3000"
+export TEST_USER_EMAIL="your-email@gmail.com"
+export TEST_USER_CURRENT_PASSWORD='OldPassword123!'
+export TEST_USER_NEW_PASSWORD='NewPassword456!'
 npm test
 ```
+
+**Step 5 — View the HTML report**
+```bash
+npm run test:report
+```
+
+✅ Expected result:
+```
+  ✓  password reset – full happy path
+  ✓  password reset – unknown email returns non-500 (security pattern)
+  ✓  password reset – invalid token shows error alert
+
+  3 passed
+```
+
+> **Note:** Each token is single-use. Generate a fresh token before every `npm test` run.
+
+---
+
+### Preview the UI locally
+
+With the mock server running, open these in your browser:
+
+| Page | URL |
+|---|---|
+| Login | http://localhost:3000/login |
+| Forgot Password | http://localhost:3000/forgot-password |
+| Dashboard | http://localhost:3000/dashboard |
 
 ---
 
