@@ -124,16 +124,30 @@ cp .env.example .env
 
 ### Run the Tests
 
+> ⚠️ **The mock server must be running before executing any test command.** Start it in a separate terminal first:
+> ```bash
+> npx ts-node mock/server.ts
+> ```
+> Wait for: `[mock] Server running at http://localhost:3000`
+
+Once the server is running, open a second terminal and run the tests:
+
 ```bash
-# Headless (default)
+# Recommended — run all 3 tests headless
+npx playwright test
+
+# Equivalent npm alias
 npm test
 
-# Headed — watch the browser automate
-npm run test:headed
+# Headed — watch the browser automate in real time
+npx playwright test --headed
+
+# Run a specific test by name
+npx playwright test -g "full happy path"
 
 # Open HTML report after a run
-npm run test:report
-```
+npx playwright show-report
+
 
 ---
 
