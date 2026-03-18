@@ -160,7 +160,7 @@ Copy `.env.example` to `.env` and fill in all values. Never commit `.env` — it
 
 ### Quick local test (no Gmail OAuth needed)
 
-> This is the **recommended mode for reviewers**. No Gmail credentials required.
+> This is the **recommended mode for testing**. No Gmail credentials required.
 
 **Step 1 — Install dependencies and browser**
 ```bash
@@ -218,7 +218,7 @@ npm test
 npm run test:report
 ```
 
-✅ Expected result:
+ Expected result:
 ```
   ✓  password reset – full happy path
   ✓  password reset – unknown email returns non-500 (security pattern)
@@ -242,11 +242,11 @@ When you run `npm test`, Playwright automatically clicks the link as part of the
 ```
 npm test runs
   │
-  ├── Playwright uses token abc-123 to complete the reset ✅
+  ├── Playwright uses token abc-123 to complete the reset 
   │         → token abc-123 DELETED
   │
 You click the email link in Gmail
-  └── Server looks up abc-123 → not found → "Invalid or Expired Link" ❌
+  └── Server looks up abc-123 → not found → "Invalid or Expired Link" 
 ```
 
 **To manually click the reset link yourself** (without running the tests), generate a fresh token using `curl`:
@@ -261,7 +261,7 @@ curl -s -X POST http://localhost:3000/api/users/reset-password \
   -d '{"email":"your-email@gmail.com"}'
 ```
 
-Check your Gmail inbox → click the link → the reset form opens correctly ✅
+Check your Gmail inbox → click the link → the reset form opens correctly 
 The token is untouched because no test has consumed it.
 
 ---
