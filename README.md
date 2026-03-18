@@ -1,4 +1,4 @@
-# Playwright TypeScript POC — Password Reset Workflow
+# Playwright TypeScript POC -Password Reset Workflow
 
 > **Take-home assessment submission.**
 > This project demonstrates Playwright as a unified automation framework capable of validating API calls, UI interactions, and asynchronous email notifications within a single end-to-end test workflow.
@@ -75,11 +75,11 @@ playwright-poc/
 ## Architecture Decisions
 
 ### Why a local mock server?
-The assignment requires testing a full `API → Email → UI` flow. Rather than depending on a live Echelix environment (which is not accessible), a local Express mock server replicates the exact same contract: it accepts `POST /api/users/reset-password`, generates a UUID token, and sends a **real email** via Gmail SMTP. This means the Gmail polling and parsing layers are exercised with genuine email payloads — not stubs.
+The assignment requires testing a full `API → Email → UI` flow. Rather than depending on a live Echelix environment (which is not accessible), a local Express mock server replicates the exact same contract: it accepts `POST /api/users/reset-password`, generates a UUID token, and sends a **real email** via Gmail SMTP. This means the Gmail polling and parsing layers are exercised with genuine email payloads not stubs.
 
 ### Why two Gmail credential sets?
 - **Sending** (SMTP + App Password): simple, no OAuth scope needed, ideal for outbound-only mock server
-- **Reading** (OAuth2 + Refresh Token): required by Gmail API for inbox polling — App Passwords cannot access the API
+- **Reading** (OAuth2 + Refresh Token): required by Gmail API for inbox polling App Passwords cannot access the API
 
 ### Why `RESET_LINK_OVERRIDE`?
 Allows running all 3 tests without Gmail credentials by manually injecting the reset link. This is the recommended mode for CI environments or reviewers who do not want to set up OAuth2.
@@ -133,13 +133,13 @@ cp .env.example .env
 Once the server is running, open a second terminal and run the tests:
 
 ```bash
-# Recommended — run all 3 tests headless
+# Recommended run all 3 tests headless
 npx playwright test
 
 # Equivalent npm alias
 npm test
 
-# Headed — watch the browser automate in real time
+# Headed -watch the browser automate in real time
 npx playwright test --headed
 
 # Run a specific test by name
@@ -153,7 +153,7 @@ npx playwright show-report
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in all values. Never commit `.env` — it is in `.gitignore`.
+Copy `.env.example` to `.env` and fill in all values. Never commit `.env` -it is in `.gitignore`.
 
 | Variable | Required | Description |
 |---|---|---|
@@ -163,26 +163,26 @@ Copy `.env.example` to `.env` and fill in all values. Never commit `.env` — it
 | `TEST_USER_EMAIL` | ✅ | Gmail address used as the test account |
 | `TEST_USER_CURRENT_PASSWORD` | ✅ | Password before the reset |
 | `TEST_USER_NEW_PASSWORD` | ✅ | Password to set during the reset |
-| `GMAIL_CLIENT_ID` | ✅ | OAuth2 Client ID — for **reading** inbox via Gmail API |
-| `GMAIL_CLIENT_SECRET` | ✅ | OAuth2 Client Secret — for **reading** inbox |
-| `GMAIL_REFRESH_TOKEN` | ✅ | OAuth2 Refresh Token — for **reading** inbox |
+| `GMAIL_CLIENT_ID` | ✅ | OAuth2 Client ID -for **reading** inbox via Gmail API |
+| `GMAIL_CLIENT_SECRET` | ✅ | OAuth2 Client Secret -for **reading** inbox |
+| `GMAIL_REFRESH_TOKEN` | ✅ | OAuth2 Refresh Token -for **reading** inbox |
 | `GMAIL_USER` | ✅ | Gmail address to poll |
 | `GMAIL_SMTP_USER` | ✅ | Gmail address for **sending** reset emails |
-| `GMAIL_SMTP_APP_PASSWORD` | ✅ | Gmail App Password (16 chars) — for **sending** |
+| `GMAIL_SMTP_APP_PASSWORD` | ✅ | Gmail App Password (16 chars) -for **sending** |
 | `MOCK_PORT` | Optional | Port for mock server (default: `3000`) |
-| `RESET_LINK_OVERRIDE` | Optional | Bypass Gmail — paste a token URL to skip email polling |
+| `RESET_LINK_OVERRIDE` | Optional | Bypass Gmail -paste a token URL to skip email polling |
 
 ### Quick local test (no Gmail OAuth needed)
 
 > This is the **recommended mode for testing**. No Gmail credentials required.
 
-**Step 1 — Install dependencies and browser**
+**Step 1 -Install dependencies and browser**
 ```bash
 npm install
 npx playwright install chromium
 ```
 
-**Step 2 — Set up environment**
+**Step 2 -Set up environment**
 ```bash
 cp .env.example .env
 ```
@@ -197,15 +197,15 @@ TEST_USER_NEW_PASSWORD=NewPassword456!
 ```
 > ⚠️ On macOS/zsh use **single quotes** for values containing `!` when exporting in terminal
 
-**Step 3 — Open two terminals**
+**Step 3 -Open two terminals**
 
-_Terminal 1 — start the mock server:_
+_Terminal 1 -start the mock server:_
 ```bash
 npx ts-node mock/server.ts
 ```
 ✅ Wait for: `[mock] Server running at http://localhost:3000`
 
-_Terminal 2 — trigger a reset token:_
+_Terminal 2 -trigger a reset token:_
 ```bash
 curl -s -X POST http://localhost:3000/api/users/reset-password \
   -H "Content-Type: application/json" \
@@ -216,7 +216,7 @@ Copy the token URL printed in Terminal 1:
 [mock] Reset token for ...: http://localhost:3000/reset-password?token=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 ```
 
-**Step 4 — Run tests**
+**Step 4 -Run tests**
 ```bash
 export RESET_LINK_OVERRIDE="http://localhost:3000/reset-password?token=PASTE-TOKEN-HERE"
 export BASE_URL="http://localhost:3000"
@@ -227,7 +227,7 @@ export TEST_USER_NEW_PASSWORD='NewPassword456!'
 npm test
 ```
 
-**Step 5 — View the HTML report**
+**Step 5 -View the HTML report**
 ```bash
 npm run test:report
 ```
@@ -249,7 +249,7 @@ npm run test:report
 
 This is **expected behaviour**, not a bug.
 
-Reset tokens are **single-use by design** — once the link is clicked (by anyone or anything), the token is deleted from memory so it cannot be reused.
+Reset tokens are **single-use by design** -once the link is clicked (by anyone or anything), the token is deleted from memory so it cannot be reused.
 
 When you run `npm test`, Playwright automatically clicks the link as part of the happy-path test. By the time you open Gmail and click the same link yourself, the token is already gone → "Invalid or Expired Link".
 
@@ -266,10 +266,10 @@ You click the email link in Gmail
 **To manually click the reset link yourself** (without running the tests), generate a fresh token using `curl`:
 
 ```bash
-# Terminal 1 — server must be running
+# Terminal 1 -server must be running
 npx ts-node mock/server.ts
 
-# Terminal 2 — send yourself a fresh email
+# Terminal 2 -send yourself a fresh email
 curl -s -X POST http://localhost:3000/api/users/reset-password \
   -H "Content-Type: application/json" \
   -d '{"email":"your-email@gmail.com"}'
@@ -301,6 +301,6 @@ npm run test:report
 ```
 
 On failure, the following artifacts are saved automatically to `test-results/`:
-- `screenshot.png` — screenshot at point of failure
-- `trace.zip` — full Playwright trace (open with `npx playwright show-trace`)
-- `video.webm` — full video recording of the test run
+- `screenshot.png` -screenshot at point of failure
+- `trace.zip` -full Playwright trace (open with `npx playwright show-trace`)
+- `video.webm` -full video recording of the test run
