@@ -134,49 +134,56 @@ Once the server is running, open a second terminal and run the tests:
 
 ```bash
 # Recommended run all 3 tests headless
+```bash
 npx playwright test
-
+```
 # Equivalent npm alias
+```bash
 npm test
-
-# Headed -watch the browser automate in real time
+```
+# Headed - watch the browser automate in real time
+```bash
 npx playwright test --headed
-
+```
 # Run a specific test by name
+```bash
 npx playwright test -g "full happy path"
-
+```
 # Open HTML report after a run
+```bash
 npx playwright show-report
-
+```
 
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in all values. Never commit `.env` -it is in `.gitignore`.
+Copy `.env.example` to `.env` and fill in all values. Never commit `.env` - it is in `.gitignore`.
 
-| Variable | Required | Description |
-|---|---|---|
-| `BASE_URL` | ✅ | App base URL (e.g. `http://localhost:3000`) |
-| `API_BASE_URL` | ✅ | API base URL |
-| `API_KEY` | ✅ | Bearer token for API requests |
-| `TEST_USER_EMAIL` | ✅ | Gmail address used as the test account |
-| `TEST_USER_CURRENT_PASSWORD` | ✅ | Password before the reset |
-| `TEST_USER_NEW_PASSWORD` | ✅ | Password to set during the reset |
-| `GMAIL_CLIENT_ID` | ✅ | OAuth2 Client ID -for **reading** inbox via Gmail API |
-| `GMAIL_CLIENT_SECRET` | ✅ | OAuth2 Client Secret -for **reading** inbox |
-| `GMAIL_REFRESH_TOKEN` | ✅ | OAuth2 Refresh Token -for **reading** inbox |
-| `GMAIL_USER` | ✅ | Gmail address to poll |
-| `GMAIL_SMTP_USER` | ✅ | Gmail address for **sending** reset emails |
-| `GMAIL_SMTP_APP_PASSWORD` | ✅ | Gmail App Password (16 chars) -for **sending** |
-| `MOCK_PORT` | Optional | Port for mock server (default: `3000`) |
-| `RESET_LINK_OVERRIDE` | Optional | Bypass Gmail -paste a token URL to skip email polling |
+| Variable                     | Required | Description                                            |
+|------------------------------|----------|--------------------------------------------------------|
+| `BASE_URL`                   | ✅        | App base URL (e.g. `http://localhost:3000`)            |
+| `API_BASE_URL`               | ✅        | API base URL                                           |
+| `API_KEY`                    | ✅        | Bearer token for API requests                          |
+| `TEST_USER_EMAIL`            | ✅        | Gmail address used as the test account                 |
+| `TEST_USER_CURRENT_PASSWORD` | ✅        | Password before the reset                              |
+| `TEST_USER_NEW_PASSWORD`     | ✅        | Password to set during the reset                       |
+| `GMAIL_CLIENT_ID`            | ✅        | OAuth2 Client ID - for **reading** inbox via Gmail API |
+| `GMAIL_CLIENT_SECRET`        | ✅        | OAuth2 Client Secret - for **reading** inbox           |
+| `GMAIL_REFRESH_TOKEN`        | ✅        | OAuth2 Refresh Token - for **reading** inbox           |
+| `GMAIL_USER`                 | ✅        | Gmail address to poll                                  |
+| `GMAIL_SMTP_USER`            | ✅        | Gmail address for **sending** reset emails             |
+| `GMAIL_SMTP_APP_PASSWORD`    | ✅        | Gmail App Password (16 chars) - for **sending**        |
+| `MOCK_PORT`                  | Optional | Port for mock server (default: `3000`)                 |
+| `RESET_LINK_OVERRIDE`        | Optional | Bypass Gmail - paste a token URL to skip email polling |
+
+---
 
 ### Quick local test (no Gmail OAuth needed)
 
 > This is the **recommended mode for testing**. No Gmail credentials required.
 
-**Step 1 -Install dependencies and browser**
+**Step 1 - Install dependencies and browser**
 ```bash
 npm install
 npx playwright install chromium
