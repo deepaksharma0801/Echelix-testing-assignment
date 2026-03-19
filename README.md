@@ -61,7 +61,7 @@ playwright-poc/
 │   ├── loginPage.ts            # Layer 5 – Login POM: goto, login, assertLoginSuccess, assertLoginError
 │   └── resetPasswordPage.ts    # Layer 5 – Reset POM: goto, resetPassword, assertResetSuccess, assertValidationError
 ├── tests/
-│   └── passwordReset.spec.ts   # Layer 6 – 3 tests: happy path + unknown email + invalid token
+│   └── passwordReset.spec.ts   # Layer 6 – 4 tests: happy path + unknown email + invalid token + negetive path
 ├── mock/
 │   └── server.ts               # Layer 6 – Express backend: seeded user store, token registry, nodemailer SMTP
 ├── playwright.config.ts        # Layer 1 – Chromium only, 90s timeout, HTML report, trace on failure
@@ -99,6 +99,8 @@ Without it, a stale reset email from a previous run could be matched by the poll
 | `password reset – full happy path` | E2E | All 5 success criteria in sequence |
 | `password reset – unknown email returns non-500` | Negative / API | API does not leak server errors for unknown users |
 | `password reset – invalid token shows error alert` | Negative / UI | UI handles tampered/expired tokens gracefully |
+| `password reset – invalid credentials show login error` | Negative / UI | Login form rejects wrong passwords with a clear error |
+
 
 ---
 
@@ -133,7 +135,7 @@ cp .env.example .env
 Once the server is running, open a second terminal and run the tests:
 
 ```bash
-# Recommended run all 3 tests headless
+# Recommended run all 4 tests headless
 ```bash
 npx playwright test
 ```
@@ -244,8 +246,9 @@ npm run test:report
   ✓  password reset – full happy path
   ✓  password reset – unknown email returns non-500 (security pattern)
   ✓  password reset – invalid token shows error alert
+  ✓  4 [chromium] › tests/passwordReset.spec.ts:131:5 › password reset – invalid credentials show login error
 
-  3 passed
+  4 passed
 ```
 
 > **Note:** Each token is single-use. Generate a fresh token before every `npm test` run.
