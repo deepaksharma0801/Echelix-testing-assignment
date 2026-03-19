@@ -125,3 +125,12 @@ test('password reset – invalid token shows error alert', async ({ page }) => {
   await resetPage.goto(`${baseUrl}/reset-password?token=INVALID-TOKEN-00000000`);
   await resetPage.assertValidationError();
 });
+
+// ─── Test 4: Negative – invalid credentials ───────────────────────────────────
+
+test('password reset – invalid credentials show login error', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.goto();
+  await loginPage.login('saideepaksharma8@gmail.com', 'WrongPassword999!');
+  await loginPage.assertLoginError();
+});
